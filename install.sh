@@ -3,6 +3,8 @@
 # Source configuration file
 . ./install.conf
 
+echo $USER_NAME
+
 # """
 # Confused between Snapper and Timeshift,
 # So, can't choose BTRFS layout and the
