@@ -102,14 +102,19 @@ disk_setup() {    # Check if unattended installation is enabled and if the disk 
         exit 1
     fi
 
-    # If not unattended, ask for disk selection
+    # If not unattended, present a menu to select disk
     if [[ "$UNATTENDED" != "yes" ]]; then
         echo "Available disks:"
-        lsblk -d -o NAME,SIZE,TYPE | grep disk
+        mapfile -t DISK_LIST < <(lsblk -d -o NAME,SIZE,TYPE | grep disk | awk '{print "/dev/" $1 " (" $2 ")"}')
+        for i in "${!DISK_LIST[@]}"; do
+            echo "$((i+1))) ${DISK_LIST[$i]}"
+        done
         echo ""
-        read -p "Enter the disk to use (e.g., /dev/sda): " DISK
-        if [[ -z "$DISK" ]]; then
-            echo "No disk specified. Exiting."
+        read -p "Select the disk to use [1-${#DISK_LIST[@]}]: " DISK_CHOICE
+        if [[ "$DISK_CHOICE" =~ ^[0-9]+$ ]] && (( DISK_CHOICE >= 1 && DISK_CHOICE <= ${#DISK_LIST[@]} )); then
+            DISK=$(echo "${DISK_LIST[$((DISK_CHOICE-1))]}" | awk '{print $1}')
+        else
+            echo "Invalid selection. Exiting."
             exit 1
         fi
     fi
@@ -146,11 +151,8 @@ disk_setup() {    # Check if unattended installation is enabled and if the disk 
         echo ""
         echo "New partitions"
         echo "$NEW_TABLE" | grep "$DISK"
-        # Compare and show only the changed part
-        echo "Partition table changes:"
-        diff <(echo "$CURRENT_TABLE" | grep "$DISK") <(echo "$NEW_TABLE" | grep "$DISK") | grep -E "^[<>]" 
         echo ""
-        
+
         # Confirm writing changes
         echo "WARNING: This will write changes to the disk."
         echo "1) Yes, write boot partition changes"
@@ -171,19 +173,21 @@ disk_setup() {    # Check if unattended installation is enabled and if the disk 
         # Get the current partition table and save it
         echo "Current partition table:"
         CURRENT_TABLE=$(fdisk -l $DISK)
-        echo "$CURRENT_TABLE"
+
         # Create a new partition
-        echo "Creating root partition (remaining space)..."
+        echo "Creating new Root partition (remaining space)"
         NEW_TABLE=$(create_partition "" "n")
-        # Show the new partition table
-        echo "New partition table:"
-        echo "$NEW_TABLE"
-        # Compare and show only the changed part
-        echo "Partition table changes:"
-        diff <(echo "$CURRENT_TABLE") <(echo "$NEW_TABLE") | grep -E "^[<>]"
-        echo "WARNING: This will write changes to the disk."
-        # Confirm writing changes
+        # Show partitions
         echo ""
+        echo "Old partitions"
+        echo "$CURRENT_TABLE" | grep "$DISK"
+        echo ""
+        echo "New partitions"
+        echo "$NEW_TABLE" | grep "$DISK"
+        echo ""
+
+        # Confirm writing changes
+        echo "WARNING: This will write changes to the disk."
         echo "1) Yes, write root partition changes"
         echo "2) No, cancel installation"
         read -p "Choose option (1/2): " CONFIRM_WRITE
@@ -197,7 +201,7 @@ disk_setup() {    # Check if unattended installation is enabled and if the disk 
     echo "Created root partition: $ROOT_PARTITION"
     mkfs.btrfs "$ROOT_PARTITION"
 
-    # mount_disk
+    mount_disk
 }
 
 
