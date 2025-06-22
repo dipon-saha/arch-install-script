@@ -135,18 +135,23 @@ disk_setup() {    # Check if unattended installation is enabled and if the disk 
         # Get the current partition table and save it
         echo "Current partition table:"
         CURRENT_TABLE=$(fdisk -l $DISK)
-        echo "$CURRENT_TABLE"
-        # # Create a new partition
-        # echo "Creating new Boot partition (512M)"
-        # NEW_TABLE=$(create_partition "512M" "n")
-        # # Show the new partition table
-        # echo "New partition table:"
-        # echo "$NEW_TABLE"
-        # # Compare and show only the changed part
-        # echo "Partition table changes:"
-        # diff <(echo "$CURRENT_TABLE") <(echo "$NEW_TABLE") | grep -E "^[<>]"
-        # # Confirm writing changes
-        # echo ""
+  
+        # Create a new partition
+        echo "Creating new Boot partition (512M)"
+        NEW_TABLE=$(create_partition "512M" "n")
+        # Show partitions
+        echo ""
+        echo "Old partitions"
+        echo "$CURRENT_TABLE" | grep "$DISK"
+        echo ""
+        echo "New partitions"
+        echo "$NEW_TABLE" | grep "$DISK"
+        # Compare and show only the changed part
+        echo "Partition table changes:"
+        diff <(echo "$CURRENT_TABLE" | grep "$DISK") <(echo "$NEW_TABLE" | grep "$DISK") | grep -E "^[<>]" 
+        echo ""
+        
+        # Confirm writing changes
         echo "WARNING: This will write changes to the disk."
         echo "1) Yes, write boot partition changes"
         echo "2) No, cancel installation"
