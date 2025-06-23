@@ -145,11 +145,11 @@ disk_setup() {    # Check if unattended installation is enabled and if the disk 
         echo "Creating new Boot partition (512M)"
         # Ask for Size confirmation
         echo "Press Enter to continue or specify a size (e.g., 512M, 1G)"
-        read -r SIZE
-        if [[ -z "$SIZE" ]]; then
-            SIZE="512M"
+        read -r BOOT_SIZE
+        if [[ -z "$BOOT_SIZE" ]]; then
+            BOOT_SIZE="512M"
         fi
-        NEW_TABLE=$(create_partition "$SIZE" "n")
+        NEW_TABLE=$(create_partition "$BOOT_SIZE" "n")
         # Show partitions
         echo ""
         echo "Old partitions"
@@ -170,7 +170,7 @@ disk_setup() {    # Check if unattended installation is enabled and if the disk 
         fi
     fi
 
-    BOOT_PARTITION=$(create_partition "$SIZE" "y")
+    BOOT_PARTITION=$(create_partition "$BOOT_SIZE" "y")
     echo "Created boot partition: $BOOT_PARTITION"
     mkfs.fat -F 32 "$BOOT_PARTITION"
 
@@ -184,11 +184,11 @@ disk_setup() {    # Check if unattended installation is enabled and if the disk 
         echo "Creating new Root partition (remaining space)"
         # Ask for Size confirmation
         echo "Press Enter to continue or specify a size (e.g., 64G, 1T)"
-        read -r SIZE
-        if [[ -z "$SIZE" ]]; then
-            SIZE=""
+        read -r ROOT_SIZE
+        if [[ -z "$ROOT_SIZE" ]]; then
+            ROOT_SIZE=""
         fi
-        NEW_TABLE=$(create_partition "$SIZE" "n")
+        NEW_TABLE=$(create_partition "$ROOT_SIZE" "n")
         # Show partitions
         echo ""
         echo "Old partitions"
@@ -209,7 +209,7 @@ disk_setup() {    # Check if unattended installation is enabled and if the disk 
         fi
     fi
 
-    ROOT_PARTITION=$(create_partition "$SIZE" "y")
+    ROOT_PARTITION=$(create_partition "$ROOT_SIZE" "y")
     echo "Created root partition: $ROOT_PARTITION"
     mkfs.btrfs "$ROOT_PARTITION"
 
