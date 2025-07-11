@@ -84,6 +84,8 @@ main() {
     genfstab -U /mnt >> /mnt/etc/fstab
     echo "fstab generated."
 
+    cp ./* /mnt/root/arch-install-script/
+
     # Configure system in chroot
     echo "Configuring system..."
     chroot_setup
