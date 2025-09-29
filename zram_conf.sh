@@ -17,13 +17,12 @@ echo "zram" > /etc/modules-load.d/zram.conf
 # Create a udev rule to configure zram
 echo "Creating udev rule for zram..."
 cat <<EOF > /etc/udev/rules.d/99-zram.rules
-ACTION=="add", KERNEL=="zram0", ATTR{comp_algorithm}="zstd", ATTR{disksize}="$ZRAM_SIZE", RUN="/usr/bin/mkswap -U clear /dev/%k", TAG+="systemd"
+ACTION=="add", KERNEL=="zram0", ATTR{initstate}=="0", ATTR{comp_algorithm}="zstd", ATTR{disksize}="$ZRAM_SIZE", TAG+="systemd"
 EOF
 
 echo "Udev rule created at /etc/udev/rules.d/99-zram.rules"
 
 # Add zram to /etc/fstab for automatic swap configuration
 echo "Configuring /etc/fstab for zram swap..."
-echo '/dev/zram0 none swap defaults,discard,pri=100 0 0' >> /etc/fstab
-
+echo '/dev/zram0 none swap defaults,discard,pri=100,x-systemd.makefs 0 0' >> /etc/fstab
 echo "ZRAM swap setup completed successfully!"
