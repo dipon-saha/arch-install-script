@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Enable pacman parallel multilib, downloads and ILoveCandy
 sudo sed -i 's/^#\[multilib\]/[multilib]/' /etc/pacman.conf
