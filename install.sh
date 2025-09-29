@@ -140,6 +140,7 @@ main() {
     # copy install script to new system for future reference
     mkdir -p /mnt/home/$USER_NAME/arch-install-script/
     cp ./* /mnt/home/$USER_NAME/arch-install-script/
+    chown -R $USER_NAME:$USER_NAME /mnt/home/$USER_NAME/arch-install-script/
     echo "Unmounting partitions..."
     umount -R /mnt
     if [ $? -ne 0 ]; then

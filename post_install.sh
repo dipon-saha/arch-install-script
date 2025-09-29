@@ -2,8 +2,8 @@
 
 # Enable pacman parallel multilib, downloads and ILoveCandy
 sudo sed -i 's/^#\[multilib\]/[multilib]/' /etc/pacman.conf
-sudo sed -i '/^\[multilib\]/{n;s/^#Include = \/Include = /}' /etc/pacman.conf
-sudo sed -i 's/^#ParallelDownloads = 5/ParallelDownloads = 8/' /etc/pacman.conf
+sudo sed -i '/^\[multilib\]/,/^$/s/^#Include/Include/' /etc/pacman.conf
+sudo sed -i 's/^[#]*ParallelDownloads = .*/ParallelDownloads = 8/' /etc/pacman.conf
 sudo sed -i 's/^#Color/Color\nILoveCandy/' /etc/pacman.conf
 echo "Pacman configuration updated."
 
