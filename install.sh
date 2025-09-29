@@ -10,25 +10,6 @@ error() {
     fi
 }
 
-# Check if the script is run as root
-if [ "$(id -u)" -ne 0 ]; then
-    echo "This script must be run as root. Please use sudo or switch to the root user."
-    error "Not running as root." "fatal"
-fi
-
-# Check if the configuration file exists
-if [ ! -f ./install.conf ]; then
-    echo "Configuration file 'install.conf' not found. Please create it before running this script."
-    error "Missing configuration file."
-else
-    # Load configuration
-    . ./install.conf
-    if [ $? -ne 0 ]; then
-        echo "Failed to load configuration file. Please check its contents."
-        error "Failed to load configuration."
-    fi
-fi
-
 check_config_vars() {
     local required_vars=("DISK" "TIME_ZONE" "HOST_NAME" "ROOT_PASS" "USER_NAME" "USER_PASS")
     for var in "${required_vars[@]}"; do
@@ -39,6 +20,29 @@ check_config_vars() {
     done
     return 0
 }
+
+
+# Check if the script is run as root
+if [ "$(id -u)" -ne 0 ]; then
+    error "Not running as root." "fatal"
+fi
+
+# Check if the configuration file exists and disk_conf.sh exists and chroot_conf.sh exists
+if [ ! -f ./disk_conf.sh ]; then
+    error "Missing disk configuration script (disk_conf.sh)." "fatal"
+elif [ ! -f ./chroot_conf.sh ]; then
+    error "Missing chroot configuration script (chroot_conf.sh)." "fatal"
+elif [ ! -f ./install.conf ]; then
+    error "Missing Installation configuration file (install.conf), Unattended Mode disabled."
+    UNATTENDED="no"
+else
+    source ./disk_conf.sh
+    source ./chroot_conf.sh
+    source ./install.conf
+    if [ $? -ne 0 ]; then
+        error "Failed to source configuration files." "fatal"
+    fi
+fi
 
 # Ask for unattended installation
 if [[ -z "$UNATTENDED" ]]; then
@@ -64,22 +68,13 @@ fi
 if [[ "$UNATTENDED" == "yes" ]]; then
     check_config_vars
     if [ $? -ne 0 ]; then
-        error "Missing required configuration variables for unattended installation." "fatal"
+        error "Missing required configuration variables for unattended installation. Please check install.conf." "fatal"
     fi
 fi
 
 
 
-# Source disk configuration script
-. ./disk_conf.sh
-if [ $? -ne 0 ]; then
-    error "Failed to load disk configuration script." "fatal"
-fi
-# Source chroot configuration script
-. ./chroot_conf.sh
-if [ $? -ne 0 ]; then
-    error "Failed to load chroot configuration script." "fatal"
-fi
+
 
 # Main function to execute the installation steps
 main() {
@@ -118,10 +113,14 @@ main() {
         error "Failed to mount disk partitions." "fatal"
     fi
 
+    # Enable pacman parallel downloads
+    echo "Enabling parallel downloads in pacman..."
+    sed -i '/^#\?ParallelDownloads *=.*/c\ParallelDownloads = 10' /etc/pacman.conf
 
     # Install base system
     echo "Installing base system packages..."
-    pacstrap /mnt base base-devel linux linux-firmware btrfs-progs grub efibootmgr vim networkmanager git
+    # Use MICROCODE_PKG variable from install.conf, fallback to empty if not set
+    pacstrap /mnt base base-devel linux linux-firmware btrfs-progs grub efibootmgr networkmanager vim git os-prober ${MICROCODE_PKG:-}
     if [ $? -ne 0 ]; then
         echo "Failed to install base packages."
         exit 1
@@ -134,17 +133,22 @@ main() {
     genfstab -U /mnt >> /mnt/etc/fstab
     echo "fstab generated."
 
-    cp ./* /mnt/root/arch-install-script/
-
     # Configure system in chroot
     echo "Configuring system..."
     chroot_setup
     echo "System configuration completed."
-
-    # echo "Unmounting partitions..."
-    # umount -R /mnt
-    # echo "Installation completed successfully!"
-    # echo "You can now reboot into your new Arch Linux system."
+    # copy install script to new system for future reference
+    mkdir -p /mnt/home/$USER_NAME/arch-install-script/
+    cp ./* /mnt/home/$USER_NAME/arch-install-script/
+    cp ./* /mnt/home/$USER_NAME/arch-install-script/
+    echo "Unmounting partitions..."
+    umount -R /mnt
+    if [ $? -ne 0 ]; then
+        echo "Warning: Failed to unmount /mnt. Some processes may still be using the mount points."
+        echo "Please check and unmount manually if needed."
+    fi
+    echo "Installation completed successfully!"
+    echo "You can now reboot into your new Arch Linux system."
 }
 
 

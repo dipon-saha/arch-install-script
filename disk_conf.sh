@@ -164,10 +164,15 @@ create_partition() {
 mount_disk() {
     mount "$ROOT_PARTITION" /mnt
 
-    btrfs subvolume create /mnt/@
-    btrfs subvolume create /mnt/@home
-    btrfs subvolume create /mnt/@log
-    btrfs subvolume create /mnt/@pkg
+    btrfs subvolume create /mnt/@           # For /
+    btrfs subvolume create /mnt/@home       # For /home
+    btrfs subvolume create /mnt/@log        # For /var/log
+
+    # Optional subvolumes for specific use cases
+    btrfs subvolume create /mnt/@cache      # For /var/cache
+    btrfs subvolume create /mnt/@tmp        # For /var/tmp
+    btrfs subvolume create /mnt/@spool      # For /var/spool
+    btrfs subvolume create /mnt/@libvirt    # For /var/lib/libvirt
 
     umount /mnt
 
@@ -182,6 +187,15 @@ mount_disk() {
     mkdir -p /mnt/var/log
     mount -o noatime,ssd,discard=async,compress=zstd:3,space_cache=v2,subvol=@log "$ROOT_PARTITION" /mnt/var/log
 
-    mkdir -p /mnt/var/cache/pacman/pkg
-    mount -o noatime,ssd,discard=async,compress=zstd:3,space_cache=v2,subvol=@pkg "$ROOT_PARTITION" /mnt/var/cache/pacman/pkg
+    mkdir -p /mnt/var/cache
+    mount -o noatime,ssd,discard=async,compress=zstd:3,space_cache=v2,subvol=@cache "$ROOT_PARTITION" /mnt/var/cache
+
+    mkdir -p /mnt/var/tmp
+    mount -o noatime,ssd,discard=async,compress=zstd:3,space_cache=v2,subvol=@tmp "$ROOT_PARTITION" /mnt/var/tmp
+
+    mkdir -p /mnt/var/spool
+    mount -o noatime,ssd,discard=async,compress=zstd:3,space_cache=v2,subvol=@spool "$ROOT_PARTITION" /mnt/var/spool
+
+    mkdir -p /mnt/var/lib/libvirt
+    mount -o noatime,ssd,discard=async,nodatacow,compress=zstd:3,space_cache=v2,subvol=@libvirt "$ROOT_PARTITION" /mnt/var/lib/libvirt
 }

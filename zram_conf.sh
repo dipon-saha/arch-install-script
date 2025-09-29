@@ -4,6 +4,8 @@ if [ "$EUID" -ne 0 ]; then
   exit
 fi
 
+ZRAM_SIZE="8G"  # Set the desired size for ZRAM
+
 # Install util-linux if not already installed
 echo "Installing util-linux package..."
 pacman -S --needed util-linux
@@ -15,7 +17,7 @@ echo "zram" > /etc/modules-load.d/zram.conf
 # Create a udev rule to configure zram
 echo "Creating udev rule for zram..."
 cat <<EOF > /etc/udev/rules.d/99-zram.rules
-ACTION=="add", KERNEL=="zram0", ATTR{comp_algorithm}="zstd", ATTR{disksize}="8G", RUN="/usr/bin/mkswap -U clear /dev/%k", TAG+="systemd"
+ACTION=="add", KERNEL=="zram0", ATTR{comp_algorithm}="zstd", ATTR{disksize}="$ZRAM_SIZE", RUN="/usr/bin/mkswap -U clear /dev/%k", TAG+="systemd"
 EOF
 
 echo "Udev rule created at /etc/udev/rules.d/99-zram.rules"

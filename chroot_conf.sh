@@ -70,13 +70,34 @@ echo root:$ROOT_PASS | chpasswd
 useradd -m -G wheel $USER_NAME
 echo $USER_NAME:$USER_PASS | chpasswd
 
+# create subvolumes for user cache
+btrfs subvolume create /home/$USER_NAME/.cache
+chown $USER_NAME:$USER_NAME /home/$USER_NAME/.cache
+
 echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers.d/$USER_NAME
 
 # Install bootloader
 echo "Installing bootloader..."
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+
+# Generate GRUB configuration
+echo "Enabling os-prober in GRUB configuration..."
+if grep -q '^GRUB_DISABLE_OS_PROBER=' /etc/default/grub; then
+    sed -i 's/^GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' /etc/default/grub
+if grep -q '^GRUB_TIMEOUT=' /etc/default/grub; then
+    sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=3/' /etc/default/grub
+else
+    echo 'GRUB_TIMEOUT=3' >> /etc/default/grub
+fi
+    echo 'GRUB_DISABLE_OS_PROBER=false' >> /etc/default/grub
+fi
+echo "Set GRUB_TIMEOUT to 3 seconds..."
+sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=3/' /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 systemctl enable NetworkManager
+
+# Exit chroot
+exit
 EOF
 }
