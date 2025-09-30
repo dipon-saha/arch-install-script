@@ -119,9 +119,8 @@ main() {
 
     # Install base system
     echo "Installing base system packages..."
-    
-    # Install packages from packages.list, ignoring comments and blank lines
-    pacstrap /mnt $(grep -vE '^\s*#|^$' packages.list | awk '{print $1}')
+    # Use MICROCODE_PKG variable from install.conf, fallback to empty if not set
+    pacstrap /mnt base base-devel linux linux-firmware btrfs-progs grub efibootmgr networkmanager vim git os-prober ${MICROCODE_PKG:-}
     if [ $? -ne 0 ]; then
         echo "Failed to install base packages."
         exit 1

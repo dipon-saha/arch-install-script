@@ -98,10 +98,7 @@ fi
 echo "Generating GRUB configuration..."
 grub-mkconfig -o /boot/grub/grub.cfg
 
-echo "Enabling essential services..."
 systemctl enable NetworkManager
-systemctl enable pipewire pipewire-pulse wireplumber
-systemctl enable --now bluetooth
 
 # Exit chroot
 exit
