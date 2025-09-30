@@ -41,14 +41,14 @@ sudo snapper -c home set-config ALLOW_USERS="$USER" SYNC_ACL=yes
 
 # OverlayFs hook for Snapper in /etc/mkinitcpio.conf
 echo "Configuring mkinitcpio for Snapper..."
-grep "HOOKS" /etc/mkinitcpio.conf | grep -q "overlayfs"
+grep "HOOKS" /etc/mkinitcpio.conf | grep -q "grub-btrfs-overlayfs"
 if [ $? -ne 0 ]; then
-    echo "Adding overlayfs to HOOKS in /etc/mkinitcpio.conf"
-    if ! grep -E '^HOOKS=.*overlayfs' /etc/mkinitcpio.conf > /dev/null; then
-        sudo sed -i 's/^HOOKS=(\(.*\))/HOOKS=(\1 overlayfs)/' /etc/mkinitcpio.conf
+    echo "Adding grub-btrfs-overlayfs to HOOKS in /etc/mkinitcpio.conf"
+    if ! grep -E '^HOOKS=.*grub-btrfs-overlayfs' /etc/mkinitcpio.conf > /dev/null; then
+        sudo sed -i 's/^HOOKS=(\(.*\))/HOOKS=(\1 grub-btrfs-overlayfs)/' /etc/mkinitcpio.conf
         sudo mkinitcpio -P
     else
-        echo "overlayfs already present in HOOKS."
+        echo "grub-btrfs-overlayfs already present in HOOKS."
     fi
 fi
 
@@ -58,7 +58,7 @@ sudo systemctl enable grub-btrfsd.service
 echo "Snapper installation and configuration completed."
 
 # Audio setup
-sudo pacman -S --needed pipewire \
+sudo pacman -S pipewire \
                         pipewire-alsa \
                         pipewire-jack \
                         pipewire-pulse \
@@ -69,24 +69,20 @@ sudo systemctl enable --now pipewire pipewire-pulse wireplumber
 echo "Audio setup completed."
 
 # Bluetooth setup
-sudo pacman -S --needed bluez \
+sudo pacman -S bluez \
                         bluez-utils \
                         blueman --noconfirm
 sudo systemctl enable --now bluetooth
 echo "Bluetooth setup completed."
 
 # tools
-sudo pacman -S --needed openssh \
+sudo pacman -S openssh \
                         htop \
                         wget \
                         curl --noconfirm
 
-# Display Manager
-sudo pacman -S --needed sddm --noconfirm
-sudo systemctl enable sddm
-
 # Hyprland and related packages
-sudo pacman -S --needed hyprland \
+sudo pacman -S hyprland \
                         dunst \
                         kitty \
                         dolphin \
@@ -96,5 +92,8 @@ sudo pacman -S --needed hyprland \
                         qt6-wayland \
                         polkit-kde-agent \
                         grim \
-                        slurp \
-                        networkmanager-applet --noconfirm
+                        slurp --noconfirm
+
+# Display Manager
+sudo pacman -S sddm --noconfirm
+sudo systemctl enable sddm
