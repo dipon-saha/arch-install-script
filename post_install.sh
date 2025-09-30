@@ -52,6 +52,7 @@ echo "Enabling grub-btrfsd service..."
 sudo systemctl enable grub-btrfsd.service
 echo "Snapper installation and configuration completed."
 
+
 # Install Paru AUR helper
 echo "Installing Paru AUR helper..."
 git clone https://aur.archlinux.org/paru.git /tmp/paru
