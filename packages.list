@@ -12,3 +12,30 @@ vim                                         # Vim text editor
 
 # Microcodes
 intel-ucode                                 # Intel CPU microcode updates
+
+# Snapper and related tools
+snapper                                     # Command-line tool for managing snapshots
+grub-btrfs                                  # GRUB integration for Btrfs snapshots
+snap-pac                                    # Snapshot management for Pacman
+inotify-tools                               # Tools for monitoring filesystem events
+btrfs-assistant                             # GUI for Btrfs snapshot management
+
+# Audio and multimedia
+pipewire                                     # Next-generation multimedia framework
+pipewire-alsa                                # PipeWire ALSA plugin
+pipewire-jack                                # PipeWire JACK support
+pipewire-pulse                               # PipeWire PulseAudio support
+gst-plugin-pipewire                          # GStreamer plugin for PipeWire
+libpulse                                     # PulseAudio client libraries
+wireplumber                                  # Session manager for PipeWire
+
+# Bluetooth
+bluez                                       # Bluetooth protocol stack
+bluez-utils                                 # Bluetooth utilities
+blueman                                     # Bluetooth manager GUI
+
+# Utilities
+openssh                                    # OpenSSH for SSH connectivity
+htop                                       # Interactive process viewer
+wget                                       # Network downloader
+curl                                       # Command-line tool for transferring data

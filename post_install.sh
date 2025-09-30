@@ -8,23 +8,13 @@ sudo sed -i 's/^#Color/Color\nILoveCandy/' /etc/pacman.conf
 echo "Pacman configuration updated."
 
 # Update system
-sudo pacman -Syu --noconfirm
+sudo pacman -Syyu --noconfirm
 echo "System updated."
 
 # Enable zram with zram_conf.sh
 echo "Enabling ZRAM for swap..."
 sudo bash ./zram_conf.sh
 echo "ZRAM enabled."
-
-# Install packages from extra_packages.list, ignoring comments and blank lines
-echo "Installing additional packages..."
-sudo pacman -S $(grep -vE '^\s*#|^$' extra_packages.list | awk '{print $1}') --noconfirm
-if [ $? -ne 0 ]; then
-    echo "Failed to install some packages. Please check the package names in extra_packages.list."
-    exit 1
-else
-    echo "Additional packages installed."
-fi
 
 # Snapper Configuration
 echo "Configuring Snapper..."
@@ -53,6 +43,8 @@ sudo systemctl enable grub-btrfsd.service
 echo "Snapper installation and configuration completed."
 
 
+
+
 # Install Paru AUR helper
 echo "Installing Paru AUR helper..."
 git clone https://aur.archlinux.org/paru.git /tmp/paru
@@ -62,10 +54,16 @@ cd -
 rm -rf /tmp/paru
 echo "Paru installed."
 
-# Enable essential services
-sudo systemctl enable pipewire pipewire-pulse wireplumber
-sudo systemctl enable --now bluetooth
+# Install packages from hypr_packages.list, ignoring comments and blank lines
+echo "Installing additional packages..."
+sudo pacman -S $(grep -vE '^\s*#|^$' hypr_packages.list | awk '{print $1}') --noconfirm
+if [ $? -ne 0 ]; then
+    echo "Failed to install some packages. Please check the package names in hypr_packages.list."
+    exit 1
+else
+    echo "Additional packages installed."
+fi
 
-# # Enable SDDM display manager
-# echo "Enabling SDDM display manager..."
-# sudo systemctl enable sddm
+# Enable SDDM display manager
+echo "Enabling SDDM display manager..."
+sudo systemctl enable sddm
