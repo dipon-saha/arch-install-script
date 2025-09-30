@@ -8,7 +8,42 @@ sudo sed -i 's/^#Color/Color\nILoveCandy/' /etc/pacman.conf
 echo "Pacman configuration updated."
 
 # Update system
-sudo pacman -Syu --noconfirm
+sudo pacman -Syyu --noconfirm
+echo "System updated."
+
+# Enable zram with zram_conf.sh
+echo "Enabling ZRAM for swap..."
+sudo bash ./zram_conf.sh
+echo "ZRAM enabled."
+
+# Snapper Configuration
+echo "Configuring Snapper..."
+sudo snapper -c root create-config /
+sudo snapper -c home create-config /home
+
+sudo snapper -c root set-config ALLOW_USERS="$USER" SYNC_ACL=yes
+sudo snapper -c home set-config ALLOW_USERS="$USER" SYNC_ACL=yes
+
+# OverlayFs hook for Snapper in /etc/mkinitcpio.conf
+echo "Configuring mkinitcpio for Snapper with OverlayFS..."
+grep "HOOKS" /etc/mkinitcpio.conf | grep -q "grub-btrfs-overlayfs"
+if [ $? -ne 0 ]; then
+    echo "Adding grub-btrfs-overlayfs to HOOKS in /etc/mkinitcpio.conf"
+    if ! grep -E '^HOOKS=.*grub-btrfs-overlayfs' /etc/mkinitcpio.conf > /dev/null; then
+        sudo sed -i 's/^HOOKS=(\(.*\))/HOOKS=(\1 grub-btrfs-overlayfs)/' /etc/mkinitcpio.conf
+        sudo mkinitcpio -P
+    else
+        echo "grub-btrfs-overlayfs already present in HOOKS."
+    fi
+fi
+
+# Enable grub-btrfsd service
+echo "Enabling grub-btrfsd service..."
+sudo systemctl enable grub-btrfsd.service
+echo "Snapper installation and configuration completed."
+
+
+
 
 # Install Paru AUR helper
 echo "Installing Paru AUR helper..."
@@ -19,82 +54,16 @@ cd -
 rm -rf /tmp/paru
 echo "Paru installed."
 
-# Enable zram with zram_conf.sh
-echo "Enabling ZRAM for swap..."
-sudo bash ./zram_conf.sh
-echo "ZRAM enabled."
-
-# Snapper installation and configuration
-echo "Installing and configuring Snapper..."
-sudo pacman -S --needed snapper \
-                        grub-btrfs \
-                        snap-pac \
-                        inotify-tools --noconfirm
-
-paru -S --needed btrfs-assistant --noconfirm
-
-sudo snapper -c root create-config /
-sudo snapper -c home create-config /home
-
-sudo snapper -c root set-config ALLOW_USERS="$USER" SYNC_ACL=yes
-sudo snapper -c home set-config ALLOW_USERS="$USER" SYNC_ACL=yes
-
-# OverlayFs hook for Snapper in /etc/mkinitcpio.conf
-echo "Configuring mkinitcpio for Snapper..."
-grep "HOOKS" /etc/mkinitcpio.conf | grep -q "overlayfs"
+# Install packages from hypr_packages.list, ignoring comments and blank lines
+echo "Installing additional packages..."
+sudo pacman -S $(grep -vE '^\s*#|^$' hypr_packages.list | awk '{print $1}') --noconfirm
 if [ $? -ne 0 ]; then
-    echo "Adding overlayfs to HOOKS in /etc/mkinitcpio.conf"
-    if ! grep -E '^HOOKS=.*overlayfs' /etc/mkinitcpio.conf > /dev/null; then
-        sudo sed -i 's/^HOOKS=(\(.*\))/HOOKS=(\1 overlayfs)/' /etc/mkinitcpio.conf
-        sudo mkinitcpio -P
-    else
-        echo "overlayfs already present in HOOKS."
-    fi
+    echo "Failed to install some packages. Please check the package names in hypr_packages.list."
+    exit 1
+else
+    echo "Additional packages installed."
 fi
 
-# Enable grub-btrfsd service
-echo "Enabling grub-btrfsd service..."
-sudo systemctl enable grub-btrfsd.service
-echo "Snapper installation and configuration completed."
-
-# Audio setup
-sudo pacman -S --needed pipewire \
-                        pipewire-alsa \
-                        pipewire-jack \
-                        pipewire-pulse \
-                        gst-plugin-pipewire \
-                        libpulse \
-                        wireplumber --noconfirm
-sudo systemctl enable --now pipewire pipewire-pulse wireplumber
-echo "Audio setup completed."
-
-# Bluetooth setup
-sudo pacman -S --needed bluez \
-                        bluez-utils \
-                        blueman --noconfirm
-sudo systemctl enable --now bluetooth
-echo "Bluetooth setup completed."
-
-# tools
-sudo pacman -S --needed openssh \
-                        htop \
-                        wget \
-                        curl --noconfirm
-
-# Display Manager
-sudo pacman -S --needed sddm --noconfirm
+# Enable SDDM display manager
+echo "Enabling SDDM display manager..."
 sudo systemctl enable sddm
-
-# Hyprland and related packages
-sudo pacman -S --needed hyprland \
-                        dunst \
-                        kitty \
-                        dolphin \
-                        wofi \
-                        xdg-desktop-portal-hyprland \
-                        qt5-wayland \
-                        qt6-wayland \
-                        polkit-kde-agent \
-                        grim \
-                        slurp \
-                        networkmanager-applet --noconfirm
