@@ -26,12 +26,11 @@ echo "ZRAM enabled."
 
 # Snapper installation and configuration
 echo "Installing and configuring Snapper..."
-sudo pacman -S --needed snapper \
+sudo pacman -S snapper \
                         grub-btrfs \
                         snap-pac \
-                        inotify-tools --noconfirm
-
-paru -S --needed btrfs-assistant --noconfirm
+                        inotify-tools \
+                        btrfs-assistant --noconfirm
 
 sudo snapper -c root create-config /
 sudo snapper -c home create-config /home
